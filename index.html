@@ -31,8 +31,8 @@ button.p{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:600}
 <div class="sm">Lines: TITLE · SCENE: street|park|room, day|sunset|night, rain|snow|fog · CHARS: Name(red,girl) · Name: "line" [happy|sad|angry|surprised|scared|laugh|smug|think] · Name walks|runs to Name|center|left|right|bench|front|back · Name waves|cheers|nods|points|thinks|jumps · Name looks at Name · CAM: wide|medium X|close X|over A B|two A B|orbit X|track X|crane · MUSIC: calm|tense|sad|happy · SFX: thunder|knock|sting · WAIT n · NARR: "text" · prefix a line with &amp; to run in parallel.</div>
 <h2>3 · Produce</h2>
 <div class="row"><button class="p" id="play">▶ Preview</button><button id="stop">■ Stop</button><button class="p" id="rec">⏺ Render MP4</button></div>
-<div class="row"><select id="res"><option value="1280">720p</option><option value="1920" selected>1080p</option></select>
-<label><input type="checkbox" id="dof" checked> Depth of field</label><label><input type="checkbox" id="auto"> Auto director</label></div>
+<div class="row"><select id="res"><option value="1280" selected>720p</option><option value="1920">1080p</option></select>
+<label><input type="checkbox" id="dof"> Depth of field</label><label><input type="checkbox" id="auto"> Auto director</label></div>
 </div>
 <div class="pn"><div class="stage"><canvas id="out" width="1280" height="720"></canvas></div>
 <div id="bar"><i></i></div><div id="log">Ready.</div></div>
@@ -73,7 +73,7 @@ CAM: crane
 WAIT 2`;
 $('#script').value=SAMPLE;
 /* ---------- renderer ---------- */
-const gl=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});
+const gl=new THREE.WebGLRenderer({antialias:false,preserveDrawingBuffer:true,powerPreference:"high-performance"});gl.setPixelRatio(1);
 gl.shadowMap.enabled=true;gl.shadowMap.type=THREE.PCFSoftShadowMap;
 let W=1280,H=720;const out=$('#out'),ctx=out.getContext('2d');
 const scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(38,16/9,.1,300);
@@ -94,7 +94,7 @@ vec2 d=vUv-.5;x*=1.-dot(d,d)*1.25;x+=(h(vUv)-.5)*.035;
 gl_FragColor=vec4(x*(1.-fade),1.);}`});
 composer.addPass(fin);
 function setRes(w){W=+w;H=Math.round(W*9/16);out.width=W;out.height=H;gl.setSize(W,H,false);composer.setSize(W,H);bokeh.uniforms.aspect.value=W/H}
-setRes(1920);$('#res').onchange=e=>setRes(e.target.value);
+setRes(1280);$('#res').onchange=e=>setRes(e.target.value);
 /* ---------- audio ---------- */
 let AC,master,dest,verb,musicG,ambG,musicNodes=[],ambNodes=[];
 function initAudio(){if(AC)return;AC=new (window.AudioContext||window.webkitAudioContext)();master=AC.createGain();master.gain.value=.8;
@@ -359,9 +359,9 @@ P.active.forEach(b=>!b.done&&tickBeat(b,dt));if(P.title)P.title.t+=dt;if(P.msg){
 P.fade+=(P.fadeTo-P.fade)*Math.min(1,dt*4.5);if(P.title){const tt=P.title,e=Math.min(tt.t/.8,1,(tt.dur-tt.t)/.8);P.fade=Math.max(P.fade,.0)}
 $('#bar i').style.width=Math.min(100,P.i/P.beats.length*100)+'%'}
 function finish(){P.fadeTo=1;setTimeout(()=>{if(P.rec)endRec();else log('Finished.');P.fadeTo=0},1800);$('#bar i').style.width='100%'}
-function play(rec){const {beats,warn}=parse($('#script').value);if(!beats.length)return log('Script is empty.');initAudio();AC.resume();resetWorld();
+function play(rec){try{const {beats,warn}=parse($('#script').value);if(!beats.length)return log('Script is empty.');try{initAudio();if(AC&&AC.state==='suspended')AC.resume()}catch(audioError){console.warn('Audio unavailable:',audioError)}resetWorld();
 Object.assign(P,{on:true,i:0,beats,active:[],time:0,autoN:0,explicitNow:false});userShot=false;
-log(warn.length?warn.join(' · '):(rec?'Rendering… keep this tab open.':'Playing preview…'));if(!rec)P.rec=null}
+log(warn.length?warn.join(' · '):(rec?'Rendering… keep this tab open.':'Preview playing…'));if(!rec)P.rec=null}catch(e){P.on=false;console.error(e);log('Preview error: '+(e&&e.message?e.message:'Could not start. Reload the page and try again.'));}}
 $('#play').onclick=()=>{if(P.rec)endRec(true);play(false)};
 $('#stop').onclick=()=>{P.on=false;if(P.rec)endRec(true);stopNodes(musicNodes);stopNodes(ambNodes);log('Stopped.')};
 /* ---------- recording / export ---------- */
