@@ -364,6 +364,7 @@ case'scene':b.done=true;break
 case'move':if(!b.c.tgt||b.age>b.max){b.done=true;b.c.tgt=null}break;
 case'door':if(b.age>=b.dur)b.done=true;break;
 case'emote':if(b.age>b.dur){b.done=true;if(b.c.emote===b.e)b.c.emote=null}break;
+case'weight':if(b.age>b.dur){b.done=true;if(b.c){b.c.emote=null;if(b.c.weightObj)b.c.weightObj.position.y=1.35}}break;
 case'say':{if(b.c&&AC&&b.age>b.pb){blip(b.c.pitch);b.pb=b.age+.09+Math.random()*.06}if(b.age>b.dur){b.done=true;if(b.c){b.c.talk=false;b.c.ex='neutral'}if(P.sub&&P.sub.text===b.text)P.sub=null}break}
 case'title':if(b.age>=b.dur){b.done=true;P.title=null}break;
 default:if(b.age>=b.dur)b.done=true}}
