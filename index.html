@@ -112,7 +112,7 @@ l.frequency.value=.07+i*.03;lg.gain.value=.5;l.connect(lg);g.gain.value=.5;lg.co
 if(m==='tense'){const o=AC.createOscillator(),g=AC.createGain();o.type='sawtooth';o.frequency.value=55;g.gain.value=.25;const f=AC.createBiquadFilter();f.frequency.value=140;o.connect(f);f.connect(g);g.connect(musicG);o.start();musicNodes.push(o)}}
 function setAmb(env){if(!AC)return;stopNodes(ambNodes);const add=(brown,type,fr,gain)=>{const s=noiseSrc(brown),f=AC.createBiquadFilter(),g=AC.createGain();f.type=type;f.frequency.value=fr;g.gain.value=gain;s.connect(f);f.connect(g);g.connect(ambG);ambNodes.push(s)};
 clearInterval(birdT);if(env.busy)birdT=setInterval(()=>tone(2200+Math.random()*1800,AC.currentTime,.09,'sine',.05),700);add(true,'lowpass',400,env.room||env.place==='shop'?.12:.45);if(env.rain)add(false,'highpass',3500,.07);if(env.fog)add(true,'lowpass',200,.3)}
-function playNarrator(text,dur){if(!('speechSynthesis'in window)||!('SpeechSynthesisUtterance'in window))return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.94;u.pitch=.92;u.volume=.95;const vs=window.speechSynthesis.getVoices();const v=vs.find(x=>/^en-US/i.test(x.lang)&&/male|david|mark|guy|daniel/i.test(x.name))||vs.find(x=>/^en/i.test(x.lang));if(v)u.voice=v;window.speechSynthesis.speak(u)}catch(e){console.warn('Narration voice unavailable',e)}}
+function playNarrator(text,dur){if(!('speechSynthesis'in window)||!('SpeechSynthesisUtterance'in window))return;try{window.speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='en-US';u.rate=.91;u.pitch=.84;u.volume=1;const vs=window.speechSynthesis.getVoices();const v=vs.find(x=>/^en-US/i.test(x.lang)&&/male|david|mark|guy|daniel/i.test(x.name))||vs.find(x=>/^en/i.test(x.lang));if(v)u.voice=v;window.speechSynthesis.speak(u)}catch(e){console.warn('Narration voice unavailable',e)}}
 function tone(f,t,d,type,v,pan){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+d);o.connect(g);g.connect(master);g.connect(verb);o.start(t);o.stop(t+d+.05)}
 function burst(d,fr,v,type='lowpass',rev=false){const s=AC.createBufferSource();s.buffer=noiseBuf(false);const f=AC.createBiquadFilter(),g=AC.createGain();f.type=type;f.frequency.value=fr;const t=AC.currentTime;g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.0001,t+d);s.connect(f);f.connect(g);g.connect(master);if(rev)g.connect(verb);s.start(t);s.stop(t+d+.05)}
 function sfx(n){if(!AC)return;const t=AC.currentTime;if(n==='thunder'){burst(3.5,180,1.1,'lowpass',true);flash=1}
@@ -129,17 +129,23 @@ function blip(p){if(!AC)return;tone(p*(.85+Math.random()*.45),AC.currentTime,p<7
 /* ---------- characters ---------- */
 const COL={red:0xd33a3a,blue:0x2f6fe0,green:0x2f9e55,yellow:0xe8c433,purple:0x7a4fd0,orange:0xe8812b,pink:0xe86aa8,black:0x2b2b2e,white:0xeeeeee,teal:0x22a6a6,brown:0x7a4b2a};
 const SKIN=['#f1c7a0','#c98f62','#8d5a3b','#f6dcc0'];
-function drawFace(c,ex,open,blink,skin,ec){const x=c.getContext('2d');x.fillStyle=skin;x.fillRect(0,0,128,128);x.fillStyle=ec||'#111';if(ec){x.shadowColor=ec;x.shadowBlur=14}x.strokeStyle='#111';x.lineWidth=6;x.lineCap='round';
-const eh=blink?2:({surprised:17,scared:17,angry:9,happy:7,laugh:3}[ex]||12),ew=({surprised:11,scared:9}[ex]||8);
-[40,88].forEach((e,i)=>{x.beginPath();x.ellipse(e,56,ew,eh,0,0,7);x.fill();if(ex==='happy'||ex==='laugh'){x.fillStyle=skin;x.fillRect(e-12,56,24,14);x.fillStyle='#111';x.beginPath();x.arc(e,58,9,Math.PI,0);x.stroke()}});
-x.shadowBlur=0;x.lineWidth=5;const br=(a,b,c2,d)=>{x.beginPath();x.moveTo(a,b);x.lineTo(c2,d);x.stroke()};
-if(ex==='angry'){br(26,36,52,44);br(102,36,76,44)}if(ex==='sad'||ex==='scared'){br(26,42,52,34);br(102,42,76,34)}if(ex==='surprised')br(28,30,52,28),br(100,30,76,28);if(ex==='think'||ex==='smug'){br(78,34,102,28)}
-x.lineWidth=6;x.beginPath();const o=open>.3;
-if(ex==='surprised'||ex==='scared'){x.ellipse(64,96,9,o?16:12,0,0,7);x.stroke()}
-else if(o||ex==='laugh'){x.fillStyle='#4a1010';x.ellipse(64,94,ex==='laugh'?24:15,ex==='laugh'?18:10,0,0,7);x.fill()}
-else if(ex==='happy'||ex==='smug'){x.arc(64,80,ex==='smug'?18:24,.15,Math.PI-.15);x.stroke()}
-else if(ex==='sad'||ex==='angry'){x.arc(64,112,18,Math.PI+.3,-.3);x.stroke()}
-else if(ex==='think'){br(54,98,80,92)}else{ x.beginPath();x.moveTo(46,91);x.lineTo(82,91);x.stroke()}}
+function drawFace(c,ex,open,blink,skin,ec){
+const x=c.getContext('2d');x.clearRect(0,0,128,128);x.fillStyle=skin;x.fillRect(0,0,128,128);x.lineCap='round';x.lineJoin='round';
+const br=(a,b,c2,d,w=5)=>{x.beginPath();x.lineWidth=w;x.moveTo(a,b);x.lineTo(c2,d);x.stroke()};
+const angry=ex==='angry'||ex==='determined',worried=ex==='sad'||ex==='scared'||ex==='worried',wide=ex==='surprised'||ex==='scared'||ex==='confused';
+x.strokeStyle='#171719';x.fillStyle='#fff';x.lineWidth=4;
+[40,88].forEach((e,i)=>{const eh=blink?2:(wide?17:ex==='happy'||ex==='laugh'?8:12),ew=wide?11:9;x.beginPath();x.ellipse(e,57,ew,eh,0,0,Math.PI*2);x.fill();x.stroke();if(!blink){x.fillStyle='#171719';x.beginPath();x.ellipse(e+(i?1:-1),58,4.6,Math.max(2,eh*.58),0,0,Math.PI*2);x.fill();x.fillStyle='#fff';x.beginPath();x.arc(e-1,55,2,0,Math.PI*2);x.fill();x.fillStyle='#fff'}});
+x.strokeStyle=ec||'#171719';x.lineWidth=6;
+if(angry){br(25,38,52,47,7);br(103,38,76,47,7)}else if(worried){br(25,37,52,31,6);br(103,37,76,31,6)}else if(wide){br(27,29,52,27,5);br(101,29,76,27,5)}else if(ex==='happy'||ex==='laugh'){br(27,43,52,39,5);br(101,43,76,39,5)}else if(ex==='think'||ex==='confused'){br(78,35,103,31,5);br(26,39,51,39,5)}else{br(27,39,52,37,5);br(101,39,76,37,5)}
+x.shadowBlur=0;x.strokeStyle='#171719';x.fillStyle='#401619';x.lineWidth=5;
+if(wide){x.beginPath();x.ellipse(64,96,ex==='confused'?12:10,open>.3?17:13,0,0,Math.PI*2);if(ex==='surprised'||ex==='scared'||ex==='confused')x.stroke();else x.fill()}
+else if(open>.3||ex==='laugh'){x.beginPath();x.ellipse(64,96,ex==='laugh'?23:15,ex==='laugh'?17:11,0,0,Math.PI*2);x.fill();x.fillStyle='#f2a0a0';x.beginPath();x.ellipse(64,105,8,4,0,0,Math.PI*2);x.fill()}
+else if(ex==='happy'||ex==='smug'){x.beginPath();x.arc(64,82,ex==='smug'?17:23,.12,Math.PI-.12);x.stroke()}
+else if(ex==='sad'||ex==='angry'||ex==='worried'||ex==='determined'){x.beginPath();x.arc(64,111,18,Math.PI+.28,-.28);x.stroke()}
+else if(ex==='think'){br(54,98,80,92,5)}else if(ex==='disgusted'){br(49,97,79,101,6)}else{br(46,94,82,94,5)}
+if(ex==='sad'||ex==='crying'){x.fillStyle='rgba(90,190,255,.8)';x.beginPath();x.ellipse(28,75,4,9,.2,0,Math.PI*2);x.fill();x.beginPath();x.ellipse(100,75,4,9,-.2,0,Math.PI*2);x.fill()}
+if(ex==='happy'||ex==='laugh'){x.fillStyle='rgba(245,120,120,.22)';x.beginPath();x.ellipse(24,84,9,4,0,0,Math.PI*2);x.ellipse(104,84,9,4,0,0,Math.PI*2);x.fill()}
+}
 const chars={};
 function mk(name,attr){const g=new THREE.Group(),a=attr.toLowerCase().split(/[,\s]+/),shirt=COL[a.find(k=>COL[k])]||0x4a7fd0;
 const idx=Object.keys(chars).length,skin=a.includes('pale')?'#d9d6e0':a.includes('king')?'#4a4658':SKIN[idx%4],girl=a.includes('girl'),S=.42,ec=a.includes('king')?'#c070ff':null;
@@ -168,11 +174,11 @@ function updChar(c,dt,t){let walking=false;const sk=c.g.userData.smoke;if(sk){co
 if(c.tgt){const dx=c.tgt.x-c.g.position.x,dz=c.tgt.z-c.g.position.z,d=Math.hypot(dx,dz);if(d>.08){walking=true;const ty=Math.atan2(dx,dz);c.yaw=angLerp(c.yaw,ty,Math.min(1,dt*8));const sp=Math.min(c.speed*dt,d);c.g.position.x+=Math.sin(c.yaw)*sp;c.g.position.z+=Math.cos(c.yaw)*sp}else c.tgt=null}
 else if(c.look){const o=c.look.g.position,ty=Math.atan2(o.x-c.g.position.x,o.z-c.g.position.z);c.yaw=angLerp(c.yaw,ty,Math.min(1,dt*4))}
 c.g.rotation.y=c.yaw;c.walk=walking;
-const k=walking?c.speed*3.3:0;c.ph+=dt*(walking?c.speed*3.3:0);const sw=walking?Math.sin(c.ph)*.9:0;
+const k=walking?c.speed*3.3:0;c.ph+=dt*(walking?c.speed*3.3:0);const sw=walking?Math.sin(c.ph)*.72:0;
 if(walking&&!c.npc&&Math.sin(c.ph)*Math.sin(c.ph-dt*k)<0)step();
 c.legs[0].rotation.x=sw;c.legs[1].rotation.x=-sw;c.arms[0].rotation.x=-sw*.8;c.arms[1].rotation.x=sw*.8;
-const br=Math.sin(t*2+c.pitch)*.02;c.torso.scale.y=1+br;let hy=0,hx=0,bob=walking?Math.abs(Math.sin(c.ph))*.05:0;
-if(!walking){c.arms[0].rotation.x=Math.sin(t*1.5+c.pitch)*.04;c.arms[1].rotation.x=-c.arms[0].rotation.x}
+const breath=Math.sin(t*2+c.pitch),br=breath*.018;c.torso.scale.y=1+br;c.torso.rotation.z=walking?Math.sin(c.ph)*.055:Math.sin(t*1.15+c.pitch)*.012;c.torso.rotation.x=walking?.035:0;let hy=0,hx=0,bob=walking?Math.abs(Math.sin(c.ph))*.075:Math.sin(t*2+c.pitch)*.008;
+if(!walking){const idle=Math.sin(t*1.7+c.pitch)*.035;c.arms[0].rotation.x=idle;c.arms[1].rotation.x=-idle;c.legs[0].rotation.x=Math.sin(t*1.1+c.pitch)*.008;c.legs[1].rotation.x=-c.legs[0].rotation.x}
 c.arms[0].rotation.z=.05;c.arms[1].rotation.z=-.05;
 if(c.talk){c.open=Math.abs(Math.sin(t*14+c.pitch))>.45?1:0;hx=Math.sin(t*5)*.06;hy=Math.sin(t*3.1)*.08;if(!walking&&!c.emote){c.arms[1].rotation.x=-.5+Math.sin(t*4)*.3;c.arms[1].rotation.z=-.15}}else c.open=0;
 if(c.emote){c.et+=dt;const e=c.emote,s=Math.sin(c.et*10);
@@ -183,7 +189,7 @@ else if(e==='points'){c.arms[1].rotation.x=-1.55;c.arms[1].rotation.z=-.1}
 else if(e==='thinks'){c.arms[1].rotation.x=-2.3;c.arms[1].rotation.z=.6;hy=.2;hx=.1}
 else if(e==='jumps'){bob=Math.abs(Math.sin(c.et*5))*.9;c.arms[0].rotation.x=c.arms[1].rotation.x=-2.5}
 else if(e==='trains'||e==='practices'){const q=Math.sin(c.et*5);c.arms[0].rotation.x=-.45-q*.22;c.arms[1].rotation.x=-.45+q*.22;c.arms[0].rotation.z=.08;c.arms[1].rotation.z=-.08;c.legs[0].rotation.x=q*.12;c.legs[1].rotation.x=-q*.12;bob=0}
-else if(e==='punches'){const q=Math.sin(c.et*11);c.arms[0].rotation.x=-1.2-Math.max(0,q)*1.5;c.arms[1].rotation.x=-.35;c.arms[0].rotation.z=.12}
+else if(e==='punches'){const q=Math.sin(c.et*8),hit=Math.max(0,Math.sin(c.et*8));c.arms[0].rotation.x=-.35-hit*1.65;c.arms[1].rotation.x=-.85+Math.max(0,-q)*.5;c.arms[0].rotation.z=.12;c.torso.rotation.y=Math.sin(c.et*8)*.12}
 else if(e==='blocks'||e==='guard'){c.arms[0].rotation.x=-2.35;c.arms[1].rotation.x=-2.35;c.arms[0].rotation.z=.08;c.arms[1].rotation.z=-.08;c.legs[0].rotation.x=0;c.legs[1].rotation.x=0;bob=0}
 else if(e==='weightlift'){const q=(Math.sin(c.et*2.2)+1)/2;c.arms[0].rotation.x=-1.05-q*.22;c.arms[1].rotation.x=-1.05-q*.22;c.arms[0].rotation.z=.04;c.arms[1].rotation.z=-.04;if(c.weightObj)c.weightObj.position.y=1.95+q*.65;bob=0}
 }
@@ -315,7 +321,7 @@ if(m=l.match(/^(SHOW|HIDE)\s*:\s*(.*)/i)){const p=m[2].split(/[,\s]+/).filter(Bo
 if(m=l.match(/^FX\s*:\s*(\w+)/i)){const v=m[1].toLowerCase();return beats.push({t:'fx',v,dur:({quake:4,pulse:1.5,shockwave:2.5,lightning:.6}[v]||.3),par:true})}
 if(m=l.match(/^BOOK\s*:\s*(\w+)\s*(\w+)?/i))return beats.push({t:'book',v:m[1].toLowerCase(),who:m[2],dur:0,par:true});
 if(m=l.match(/^DOOR\s*:\s*(open|close)/i))return beats.push({t:'door',v:m[1].toLowerCase(),dur:1.15});
-if(m=l.match(/^FACE\s*:\s*(\w+)\s+(happy|sad|angry|surprised|scared|laugh|smug|think|neutral)/i))return beats.push({t:'face',who:m[1],ex:m[2].toLowerCase(),dur:0,par:true});
+if(m=l.match(/^FACE\s*:\s*(\w+)\s+(happy|sad|angry|surprised|scared|laugh|smug|think|neutral|worried|confused|disgusted|determined|crying)/i))return beats.push({t:'face',who:m[1],ex:m[2].toLowerCase(),dur:0,par:true});
 if(m=l.match(/^GUARD\s*:\s*(\w+)/i))return beats.push({t:'emote',who:m[1],e:'guard',dur:2.8,par:true});
 if(m=l.match(/^WEIGHT\s*:\s*(\w+)\s+(lift|lower|remove)/i))return beats.push({t:'weight',who:m[1],v:m[2].toLowerCase(),dur:m[2].toLowerCase()==='remove'?0:3.8,par:m[2].toLowerCase()==='remove'});
 if(m=l.match(/^HAIR\s*:\s*(\w+)\s+(spiky|long|ponytail|short|bald)/i))return beats.push({t:'style',who:m[1],v:'hair',style:m[2].toLowerCase(),dur:0,par:true});
@@ -325,7 +331,7 @@ if(m=l.match(/^MUSIC\s*:\s*(\w+)/i))return beats.push({t:'music',v:m[1].toLowerC
 if(m=l.match(/^SFX\s*:\s*(\w+)/i))return beats.push({t:'sfx',v:m[1].toLowerCase(),dur:1.2,par});
 if(m=l.match(/^WAIT\s*:?\s*([\d.]+)/i))return beats.push({t:'wait',dur:+m[1]});
 if(m=l.match(/^(?:CAM|CUT)\s*:\s*(\w+)\s*(\w+)?\s*(\w+)?/i))return beats.push({t:'cam',k:m[1].toLowerCase(),a:m[2],b:m[3],dur:0});
-if(m=l.match(/^NARR(?:ATOR)?\s*:\s*"?(.*?)"?\s*$/i))return beats.push({t:'say',who:null,text:m[1],dur:Math.max(2,m[1].split(/\s+/).length*.4)});
+if(m=l.match(/^NARR(?:ATOR)?\s*:\s*"?(.*?)"?\s*$/i))return beats.push({t:'say',who:null,text:m[1],dur:Math.max(2,m[1].split(/\s+/).length*.48)});
 if(m=l.match(/^(\w+)\s*:\s*"?(.*?)"?\s*(?:\[(\w+)\])?\s*$/)&&names.has(l.match(/^(\w+)/)[1].toLowerCase()))return beats.push({t:'say',who:m[1],text:m[2],ex:(m[3]||'neutral').toLowerCase(),dur:Math.max(1.8,m[2].split(/\s+/).length*.36),par});
 if(m=l.match(/^(\w+)\s+(walks|runs|goes|moves)\s+(?:to|toward|towards)\s+(\w+)/i))return beats.push({t:'move',who:m[1],to:m[3],run:/runs/i.test(m[2]),dur:0,par});
 if(m=l.match(/^(\w+)\s+(waves|cheers|nods|points|thinks|jumps|trains|punches|blocks|practices)/i))return beats.push({t:'emote',who:m[1],e:m[2].toLowerCase(),dur:/train|punch|block|practice/i.test(m[2])?3.2:(m[2]==='jumps'?1.1:1.8),par});
@@ -350,7 +356,7 @@ case'face':{const c=getC(b.who);if(c){c.ex=b.ex;c.draw()}b.done=true;break}
 case'weight':{const c=getC(b.who);if(!c){b.done=true;break}if(b.v==='remove'){if(c.weightObj){c.g.remove(c.weightObj);c.weightObj=null}c.emote=null;b.done=true;break}if(!c.weightObj){const q=new THREE.Group(),metal=new THREE.MeshStandardMaterial({color:0x555b65,metalness:.72,roughness:.28}),rubber=new THREE.MeshStandardMaterial({color:0x202329,roughness:.88});const bar=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,2.6,12),metal);bar.rotation.z=Math.PI/2;q.add(bar);[-1,1].forEach(x=>{const d=new THREE.Mesh(new THREE.CylinderGeometry(.38,.38,.22,16),rubber);d.rotation.z=Math.PI/2;d.position.x=x*1.05;q.add(d);const d2=new THREE.Mesh(new THREE.CylinderGeometry(.27,.27,.24,16),rubber);d2.rotation.z=Math.PI/2;d2.position.x=x*.78;q.add(d2)});c.weightObj=q;c.g.add(q)}c.weightObj.position.set(0,1.95,.8);c.emote='weightlift';c.et=0;b.c=c;break}
 case'style':{const c=getC(b.who);if(c){applyStyle(c,b.v,b.style)}b.done=true;break}
 case'look':{const c=getC(b.who);if(c)c.look=getC(b.at);b.done=true;break}
-case'say':{const c=getC(b.who);P.sub={who:b.who,text:b.text};if(!c&&b.text)playNarrator(b.text,b.dur);if(c){c.talk=true;c.ex=b.ex;b.c=c;const o=Object.values(chars).find(x=>x!==c);if(o){c.look=o;if(!o.tgt)o.look=c}b.pb=0;
+case'say':{const c=getC(b.who);P.sub={who:b.who,text:b.text,t0:P.time,dur:b.dur};if(!c&&b.text)playNarrator(b.text,b.dur);if(c){c.talk=true;c.ex=b.ex;b.c=c;const o=Object.values(chars).find(x=>x!==c);if(o){c.look=o;if(!o.tgt)o.look=c}b.pb=0;
 if($('#auto').checked&&!userShot||(P.autoLast!==b.who&&$('#auto').checked&&!P.explicitNow)){const oth=o&&o.name;if(P.autoN++%2)setShot('over',c.name,oth||c.name);else setShot('close',c.name)}}break}
 case'vis':b.names.forEach(n=>{const c=getC(n);if(!c)return;c.g.visible=b.on;if(b.on&&b.spot){const sn=b.spot.toLowerCase(),s=SPOTS[sn]||SPOTS.center;c.g.position.set(s[0],0,s[1]);c.base=sn==='roof'?12:0;c.yaw=Math.atan2(-s[0],6-s[1]);c.tgt=null;c.look=null}});b.done=true;break;
 case'fx':{const v=b.v;if(v==='shake')shakeT=1.2;else if(v==='quake'){shakeT=4;sfx('rumble')}else if(v==='pulse'){pulseGo(book.g.position,30,1.3);sfx('pulse');shakeT=1.2;pflash=.6}else if(v==='shockwave'){pulseGo(new THREE.Vector3(0,1,0),140,2.6);sfx('boom')}else if(v==='lightning'){pflash=1;sfx('thunder')}else if(v==='candles'){candleOn=false;flames.forEach(f=>f.visible=false)}else if(v==='symbol'){symGo(90,[0,62,-12]);sfx('magic')}else if(v==='portal'){symGo(34,[0,17,-14]);sfx('magic')}else if(v==='flicker')flick=4;else if(v==='dark'){darken();pflash=.8}else if(v==='windows')bmats.forEach(m=>{m.emissive.set(0x9a4dff);m.emissiveMap=null;m.emissiveIntensity=1.1;m.needsUpdate=true});else if(v==='sky'){skyMode=true;npcs.forEach(n=>{n.tgt=null;n.sky=true})}break}
@@ -440,9 +446,7 @@ const CURSED="TITLE: THE CURSED BOOK\nSCENE: park, day\nCHARS: Alex(black,hoodie
 $('#cursed').onclick=()=>{$('#script').value=CURSED;log('The Cursed Book loaded — press Preview, or Render MP4 (about 5 minutes).')};
 /* ---------- compose & loop ---------- */
 function compose(){ctx.drawImage(gl.domElement,0,0,W,H);const bar=0;
-if(P.sub&&!P.title){const f=Math.round(H*.036);ctx.font=`600 ${f}px Georgia,serif`;ctx.textAlign='center';const txt=(P.sub.who?P.sub.who+': ':'')+P.sub.text,max=W*.8,words=txt.split(' '),lines=[];let cur='';words.forEach(w=>{if(ctx.measureText(cur+' '+w).width>max){lines.push(cur);cur=w}else cur+=' '+w});lines.push(cur);
-lines.forEach((ln,i)=>{const y=H-bar-f*.6-(lines.length-1-i)*f*1.25;ctx.lineWidth=f*.2;ctx.strokeStyle='rgba(0,0,0,.85)';ctx.strokeText(ln.trim(),W/2,y);ctx.fillStyle=P.sub.who?'#fff':'#ffe9b0';ctx.fillText(ln.trim(),W/2,y)})}
-if(P.msg){const m=P.msg,a=Math.max(0,Math.min(m.t/.8,1,(m.dur-m.t)/.8));ctx.globalAlpha=a;ctx.fillStyle='#ffd88a';ctx.shadowColor='#ffb030';ctx.shadowBlur=30;ctx.textAlign='center';ctx.font='600 '+Math.round(H*.046)+'px Georgia,serif';ctx.fillText(m.text,W/2,H*.4);ctx.shadowBlur=0;ctx.globalAlpha=1}
+if(P.sub&&!P.title){const words=P.sub.text.trim().split(/\s+/).filter(Boolean),elapsed=Math.max(0,P.time-(P.sub.t0||0)),dur=P.sub.dur||Math.max(2,words.length*.48),idx=Math.min(words.length-1,Math.floor(elapsed/dur*words.length)),word=words[idx]||'',f=Math.round(H*.038),pop=1+Math.max(0,1-Math.abs((elapsed/dur*words.length)%1)*2)*.035;ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font=`900 ${Math.round(f*pop)}px Arial,Helvetica,sans-serif`;ctx.lineJoin='round';ctx.lineWidth=Math.max(4,f*.2);ctx.strokeStyle='rgba(0,0,0,.96)';ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=4;ctx.strokeText(word,W/2,H*.835);ctx.fillStyle='#ffdf00';ctx.fillText(word,W/2,H*.835);ctx.restore()}if(P.msg){const m=P.msg,a=Math.max(0,Math.min(m.t/.8,1,(m.dur-m.t)/.8));ctx.globalAlpha=a;ctx.fillStyle='#ffd88a';ctx.shadowColor='#ffb030';ctx.shadowBlur=30;ctx.textAlign='center';ctx.font='600 '+Math.round(H*.046)+'px Georgia,serif';ctx.fillText(m.text,W/2,H*.4);ctx.shadowBlur=0;ctx.globalAlpha=1}
 if(P.title){const t=P.title,a=Math.max(0,Math.min(t.t/.45,1,(t.dur-t.t)/.45));ctx.globalAlpha=a;ctx.fillStyle='rgba(4,10,18,.62)';ctx.fillRect(W*.06,H*.42,W*.88,H*.13);ctx.fillStyle='#fff2cc';ctx.textAlign='center';ctx.font=`700 ${Math.round(H*.052)}px Georgia,serif`;ctx.fillText(t.text,W/2,H*.505);ctx.globalAlpha=1}}
 let last=performance.now(),T=0;
 resetWorld();
